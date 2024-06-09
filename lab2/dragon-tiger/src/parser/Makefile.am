@@ -7,3 +7,7 @@ AM_CXXFLAGS = -pedantic -Wall
 
 EXTRA_DIST=tiger_parser.hh tiger_parser.cc tiger_lexer.cc location.hh stack.hh position.hh
 CLEANFILES=tiger_parser.hh tiger_parser.cc tiger_lexer.cc location.hh stack.hh position.hh
+
+INCLUDES = -I/c/boost_1_85_0
+LIBS = -L/c/boost_1_85_0/stage/lib
+
