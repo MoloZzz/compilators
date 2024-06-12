@@ -105,6 +105,8 @@ using utils::nl;
 // Declare precedence rules
 
 %nonassoc FUNCTION VAR TYPE DO OF ASSIGN;
+%left '+' '-';
+%left '*' '/';
 %left UMINUS;
 
 // Declare grammar rules and production actions
@@ -162,6 +164,12 @@ negExpr: MINUS expr
   { $$ = new BinaryOperator(@1, new IntegerLiteral(@1, 0), $2, o_minus); }
   %prec UMINUS
 ;
+
+expr: expr '|' expr {
+  $$ = new ast::IfThenElse(@$, $1, new ast::IfThenElse(@$, $3, new ast::IntegerLiteral(@$, 1), new ast::IntegerLiteral(@$, 0)), new ast::IntegerLiteral(@$, 0));
+}
+;
+
 
 /*opExp: expr op expr*/
 
