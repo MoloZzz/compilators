@@ -91,7 +91,7 @@ using utils::nl;
 %type <Decl *> decl funcDecl varDecl;
 %type <std::vector<Decl *>> decls;
 %type <Expr *> expr intExpr stringExpr seqExpr callExpr opExpr negExpr
-            assignExpr whileExpr forExpr breakExpr letExpr var;
+            assignExpr whileExpr forExpr breakExpr letExpr var ifThenExpr ifThenElseExpr;
 
 %type <std::vector<Expr *>> exprs nonemptyexprs;
 %type <std::vector<Expr *>> arguments nonemptyarguments;
@@ -104,12 +104,16 @@ using utils::nl;
 
 // Declare precedence rules
 
-%nonassoc FUNCTION VAR TYPE DO OF ASSIGN;
-%left '+' '-';
-%left '*' '/';
-%left UMINUS;
+%nonassoc FUNCTION VAR TYPE DO OF;
+%right ASSIGN;
+%left OR;
+%left AND;
+%left EQ NEQ;
 
-// Declare grammar rules and production actions
+%left LT LE GT GE;
+%left PLUS MINUS;
+%left TIMES DIVIDE;
+%right UMINUS;
 
 %start program;
 
@@ -132,6 +136,8 @@ expr: stringExpr { $$ = $1; }
    | breakExpr { $$ = $1; }
    | letExpr { $$ = $1; }
    | intExpr { $$ = $1; }
+   | ifThenExpr { $$ = $1; }
+   | ifThenElseExpr { $$ = $1; }
 ;
 
 varDecl: VAR ID typeannotation ASSIGN expr
@@ -188,6 +194,14 @@ opExpr: expr PLUS expr   { $$ = new BinaryOperator(@2, $1, $3, o_plus); }
                             new IfThenElse(@3, $3, new IntegerLiteral(nl, 1), new IntegerLiteral(nl, 0)),
                             new IntegerLiteral(nl, 0));
       }
+      | expr OR expr     {
+        $$ = new IfThenElse(@2, $1,
+                            new IntegerLiteral(nl, 1),
+                            new IfThenElse(@3, $3, new IntegerLiteral(nl, 1), new IntegerLiteral(nl, 0)));
+      }
+      | IF expr THEN expr ELSE expr { $$ = new IfThenElse(@1, $2, $4, $6); }
+
+      | IF expr THEN expr { $$ = new IfThenElse(@1, $2, $4, new Sequence(nl, {}));}
 ;
 
 
@@ -210,6 +224,14 @@ letExpr: LET decls IN exprs END
 ;
 
 seqExpr : LPAREN exprs RPAREN { $$ = new Sequence(@1, $2); }
+;
+
+ifThenExpr: IF expr THEN expr
+  { $$ = new IfThenElse(@1, $2, $4, new Sequence(nl, std::vector<Expr*>())); }
+;
+
+ifThenElseExpr: IF expr THEN expr ELSE expr
+  { $$ = new IfThenElse(@1, $2, $4, $6); }
 ;
 
 exprs: { $$ = std::vector<Expr *>(); }
